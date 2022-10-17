@@ -1,0 +1,33 @@
+apiVersion: 1
+
+datasources:
+  - name: Tempo
+    type: tempo
+    # Access mode - proxy (server in the UI) or direct (browser in the UI).
+    access: proxy
+    url: http://tempo:3200
+    jsonData:
+      httpMethod: POST
+      tracesToLogs:
+        datasourceUid: 'Loki'
+        tags: ['job', 'instance', 'pod', 'namespace']
+        mappedTags: [{ key: 'service.name', value: 'service' }]
+        mapTagNamesEnabled: false
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: false
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: 'prom'
+        tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+        queries:
+          - name: 'Sample query'
+            query: 'sum(rate(tempo_spanmetrics_latency_bucket{$__tags}[5m]))'
+      serviceMap:
+        datasourceUid: 'Prometheus'
+      search:
+        hide: false
+      nodeGraph:
+        enabled: true
+      lokiSearch:
+        datasourceUid: 'Loki'
